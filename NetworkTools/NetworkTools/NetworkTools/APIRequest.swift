@@ -10,11 +10,12 @@ import Alamofire
 import HandyJSON
 
 protocol APIRequest {
-    var url: String { get }
+    var host: String { get }
+    var path: String { get }
     var method: HTTPMethod { get }
     var parameters: Parameters? { get }
-    var headers: HTTPHeaders { get }
     var encoding: ParameterEncoding { get }
+    var headers: HTTPHeaders { get }
 }
 
 struct APIErrorInfo {

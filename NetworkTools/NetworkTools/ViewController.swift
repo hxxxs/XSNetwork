@@ -16,14 +16,5 @@ class ViewController: UIViewController {
         
         
     }
-
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        NetworkManager.shared.sendRequest(HomeRequest(), success: { (objc: ProductIndexModel, json) in
-            print(objc.toJSON())
-        }) { (info) in
-            print(info.message)
-        }
-    }
-
 }
 

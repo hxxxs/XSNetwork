@@ -9,7 +9,7 @@
 import Alamofire
 import HandyJSON
 
-typealias NetSuccessBlock<T: HandyJSON> = (_ value: T, [String: Any]) -> Void
+typealias NetSuccessBlock<T: HandyJSON> = (_ value: T, _ json: [String: Any]) -> Void
 typealias NetFailedBlock = (APIErrorInfo) -> Void
 
 struct NetworkManager {
@@ -19,22 +19,46 @@ struct NetworkManager {
     init() {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30
-        sessionManager = SessionManager(configuration: configuration, delegate: SessionDelegate(), serverTrustPolicyManager: nil)
+        sessionManager = SessionManager(configuration: configuration,
+                                        delegate: SessionDelegate(),
+                                        serverTrustPolicyManager: nil)
     }
 }
 
+// MARK: - request handler
+
 extension NetworkManager {
     
-    func sendRequest<T: HandyJSON>(_ r: APIRequest, success: @escaping NetSuccessBlock<T>, failure: @escaping NetFailedBlock) {
-        sendRequest(url: r.url, params: r.parameters, method: r.method, encoding: r.encoding, headers: r.headers, success: success, failure: failure)
+    func send<T: HandyJSON>(request r: APIRequest,
+                            success: @escaping NetSuccessBlock<T>,
+                            failure: @escaping NetFailedBlock) {
+        request(url: r.host + r.path,
+                params: r.parameters,
+                method: r.method,
+                headers: r.headers,
+                encoding: r.encoding,
+                success: success,
+                failure: failure)
     }
     
-    func sendRequest<T: HandyJSON>(url: String, params: Parameters?, method: HTTPMethod, encoding: ParameterEncoding, headers: HTTPHeaders, success: @escaping NetSuccessBlock<T>, failure: @escaping NetFailedBlock) {
-//        print("url: \(url)\nparams: \(params)\nheaders: \(headers)")
-        sessionManager?.request(url, method: method, parameters: params, encoding: JSONEncoding.default, headers: headers)
+    func request<T: HandyJSON>(url: String,
+                               params: Parameters?,
+                               method: HTTPMethod,
+                               headers: HTTPHeaders,
+                               encoding: ParameterEncoding,
+                               success: @escaping NetSuccessBlock<T>,
+                               failure: @escaping NetFailedBlock) {
+        debugPrint("url: \(url)\n" +
+            "params: \(String(describing: params ?? nil))\n" +
+            "headers: \(headers)")
+        sessionManager?.request(url,
+                                method: method,
+                                parameters: params,
+                                encoding: encoding,
+                                headers: headers)
             .responseJSON(completionHandler: { (response) in
                 self.responseHandler(response: response, successBlock: success, faliedBlock: failure)
-        })
+            })
     }
     
 }
@@ -42,18 +66,23 @@ extension NetworkManager {
 //  MARK: - response handle
 
 private extension NetworkManager {
-    
-    func responseHandler<T: HandyJSON>(response: DataResponse<Any>, successBlock: NetSuccessBlock<T> ,faliedBlock: NetFailedBlock){
+    func responseHandler<T: HandyJSON>(response: DataResponse<Any>,
+                                       successBlock: NetSuccessBlock<T>,
+                                       faliedBlock: NetFailedBlock){
         if let value = response.result.value as? [String: Any] {
-            successHandler(value: value, successBlock: successBlock, faliedBlock: faliedBlock)
+            successHandler(value: value,
+                           successBlock: successBlock,
+                           faliedBlock: faliedBlock)
         } else if let error = response.result.error {
-            failedHandler(error: error as NSError , faliedBlock: faliedBlock)
+            failedHandler(error: error as NSError,
+                          faliedBlock: faliedBlock)
         } else {
             dataFormatFaliure(faliedBlock: faliedBlock)
         }
     }
     
-    func failedHandler(error: NSError, faliedBlock: NetFailedBlock) {
+    func failedHandler(error: NSError,
+                       faliedBlock: NetFailedBlock) {
         var errorInfo = APIErrorInfo()
         errorInfo.code = error.code
         errorInfo.error = error
@@ -70,7 +99,9 @@ private extension NetworkManager {
         faliedBlock(errorInfo)
     }
     
-    func successHandler<T: HandyJSON>(value: [String: Any], successBlock: NetSuccessBlock<T>,faliedBlock: NetFailedBlock) {
+    func successHandler<T: HandyJSON>(value: [String: Any],
+                                      successBlock: NetSuccessBlock<T>,
+                                      faliedBlock: NetFailedBlock) {
         if let model = APIModel<T>.deserialize(from: value) {
             if model.code == 0 || model.code == 200 {
                 successBlock(model.content, value)
