@@ -35,11 +35,6 @@ struct NetTools {
 class NetAdapter: RequestAdapter {
     func adapt(_ urlRequest: URLRequest) throws -> URLRequest {
         var request = urlRequest
-//        request.setValue("", forHTTPHeaderField: "models")
-//        request.setValue("", forHTTPHeaderField: "uuid")
-//        request.setValue("", forHTTPHeaderField: "versionNumber")
-        request.setValue("1.0.0", forHTTPHeaderField: "systemVersion")
-        request.setValue("iOS", forHTTPHeaderField: "equipmentType")
         if OAuthTokenModel.shared.access_token.count > 0 {
             request.setValue(OAuthTokenModel.shared.access_token, forHTTPHeaderField: "accessToken")
         }
@@ -80,7 +75,6 @@ class NetRetrier: RequestRetrier {
             self.requestsToRetry.forEach { $0(true, 0) }
             self.requestsToRetry.removeAll()
         }) { (error) in
-            print(error)
             self.requestsToRetry.forEach { $0(false, 0) }
             self.requestsToRetry.removeAll()
             self.isRefreshing = false
@@ -91,6 +85,62 @@ class NetRetrier: RequestRetrier {
 // MARK: - RequestHandler
 
 extension NetTools {
+    
+    static func send(request r: NetRequest,
+                     success: @escaping NetSuccessJSONBlock,
+                     failure: @escaping NetFailedBlock) {
+        shared.request(url: r.host + r.path,
+                       params: r.parameters,
+                       method: r.method,
+                       encoding: r.encoding,
+                       success: success,
+                       failure: failure)
+    }
+    
+    static func send<T: Any>(request r: NetRequest,
+                             success: @escaping NetSuccessBlock<T>,
+                             failure: @escaping NetFailedBlock) {
+        shared.request(url: r.host + r.path,
+                       params: r.parameters,
+                       method: r.method,
+                       encoding: r.encoding,
+                       success: success,
+                       failure: failure)
+    }
+    
+    static func request(url: String,
+                        params: Parameters?,
+                        method: HTTPMethod,
+                        encoding: ParameterEncoding,
+                        success: @escaping NetSuccessJSONBlock,
+                        failure: @escaping NetFailedBlock) {
+        shared.sessionManager?.request(url,
+                                       method: method,
+                                       parameters: params,
+                                       encoding: encoding)
+            .responseJSON(completionHandler: { (response) in
+                self.shared.responseHandler(response: response, successJSONBlock: success, faliedBlock: failure)
+            }).validate({ (_, _, data) -> Request.ValidationResult in
+                self.shared.validate(data: data)
+            })
+    }
+    
+    static func request<T: Any>(url: String,
+                                params: Parameters?,
+                                method: HTTPMethod,
+                                encoding: ParameterEncoding,
+                                success: @escaping NetSuccessBlock<T>,
+                                failure: @escaping NetFailedBlock) {
+        shared.sessionManager?.request(url,
+                                       method: method,
+                                       parameters: params,
+                                       encoding: encoding)
+            .responseJSON(completionHandler: { (response) in
+                self.shared.responseHandler(response: response, successBlock: success, faliedBlock: failure)
+            }).validate({ (_, _, data) -> Request.ValidationResult in
+                self.shared.validate(data: data)
+            })
+    }
     
     func send(request r: NetRequest,
               success: @escaping NetSuccessJSONBlock,
@@ -126,14 +176,8 @@ extension NetTools {
                                 encoding: encoding)
             .responseJSON(completionHandler: { (response) in
                 self.responseHandler(response: response, successJSONBlock: success, faliedBlock: failure)
-            }).validate({ (request, response, data) -> Request.ValidationResult in
-                if let data = data,
-                    let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
-                    let code = json["code"] as? Int,
-                    (code == 1002 || code == 1003 || code == 1009) {
-                    return .failure(NSError(domain: "登录已过期", code: code, userInfo: nil))
-                }
-                return .success
+            }).validate({ (_, _, data) -> Request.ValidationResult in
+                self.validate(data: data)
             })
     }
     
@@ -149,15 +193,22 @@ extension NetTools {
                                 encoding: encoding)
             .responseJSON(completionHandler: { (response) in
                 self.responseHandler(response: response, successBlock: success, faliedBlock: failure)
-            }).validate({ (request, response, data) -> Request.ValidationResult in
-                if let data = data,
-                    let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
-                    let code = json["code"] as? Int,
-                    (code == 1002 || code == 1003 || code == 1009) {
-                    return .failure(NSError(domain: "登录已过期", code: code, userInfo: nil))
-                }
-                return .success
+            }).validate({ (_, _, data) -> Request.ValidationResult in
+                self.validate(data: data)
             })
+    }
+    
+    private func validate(data: Data?) -> Request.ValidationResult {
+        if let data = data,
+            let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
+            let code = json["code"] as? Int {
+            if (code == 1002 || code == 1003 || code == 1009) {
+                return .failure(NSError(domain: "登录已过期", code: code, userInfo: nil))
+            } else if code == 1001 {
+                return .failure(NSError(domain: "您还没有登录", code: code, userInfo: nil))
+            }
+        }
+        return .success
     }
     
 }
