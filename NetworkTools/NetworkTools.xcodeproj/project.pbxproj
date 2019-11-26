@@ -13,8 +13,13 @@
 		184CAD00238B641E00E1A8ED /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 184CACFE238B641E00E1A8ED /* Main.storyboard */; };
 		184CAD02238B642000E1A8ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 184CAD01238B642000E1A8ED /* Assets.xcassets */; };
 		184CAD05238B642000E1A8ED /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 184CAD03238B642000E1A8ED /* LaunchScreen.storyboard */; };
-		184CAD0E238B64A100E1A8ED /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD0D238B64A100E1A8ED /* NetworkManager.swift */; };
-		184CAD12238B748700E1A8ED /* APIRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD11238B748700E1A8ED /* APIRequest.swift */; };
+		184CAD0E238B64A100E1A8ED /* NetTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD0D238B64A100E1A8ED /* NetTools.swift */; };
+		184CAD12238B748700E1A8ED /* NetRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD11238B748700E1A8ED /* NetRequest.swift */; };
+		184CAD26238CADD400E1A8ED /* DemoRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD25238CADD400E1A8ED /* DemoRequest.swift */; };
+		184CAD2A238CB73C00E1A8ED /* ProductIndexModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD29238CB73C00E1A8ED /* ProductIndexModel.swift */; };
+		184CAD2C238CBE0A00E1A8ED /* DemoModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184CAD2B238CBE0A00E1A8ED /* DemoModel.swift */; };
+		185035E0238CF45A000FE6F6 /* OAuthTokenRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185035DF238CF45A000FE6F6 /* OAuthTokenRequest.swift */; };
+		185035E3238CF5EB000FE6F6 /* OAuthTokenModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185035E2238CF5EB000FE6F6 /* OAuthTokenModel.swift */; };
 		B78451F6CB8DF7223AC43BDD /* Pods_NetworkTools.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6337A1631A6FB2BB3DB7564 /* Pods_NetworkTools.framework */; };
 /* End PBXBuildFile section */
 
@@ -27,8 +32,13 @@
 		184CAD01238B642000E1A8ED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		184CAD04238B642000E1A8ED /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		184CAD06238B642000E1A8ED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		184CAD0D238B64A100E1A8ED /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
-		184CAD11238B748700E1A8ED /* APIRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRequest.swift; sourceTree = "<group>"; };
+		184CAD0D238B64A100E1A8ED /* NetTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetTools.swift; sourceTree = "<group>"; };
+		184CAD11238B748700E1A8ED /* NetRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetRequest.swift; sourceTree = "<group>"; };
+		184CAD25238CADD400E1A8ED /* DemoRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoRequest.swift; sourceTree = "<group>"; };
+		184CAD29238CB73C00E1A8ED /* ProductIndexModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProductIndexModel.swift; sourceTree = "<group>"; };
+		184CAD2B238CBE0A00E1A8ED /* DemoModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoModel.swift; sourceTree = "<group>"; };
+		185035DF238CF45A000FE6F6 /* OAuthTokenRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthTokenRequest.swift; sourceTree = "<group>"; };
+		185035E2238CF5EB000FE6F6 /* OAuthTokenModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthTokenModel.swift; sourceTree = "<group>"; };
 		B6337A1631A6FB2BB3DB7564 /* Pods_NetworkTools.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NetworkTools.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D913ED979A16148C0AD5C4B2 /* Pods-NetworkTools.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NetworkTools.release.xcconfig"; path = "Target Support Files/Pods-NetworkTools/Pods-NetworkTools.release.xcconfig"; sourceTree = "<group>"; };
 		FF20E2B66B817FED30DE7F74 /* Pods-NetworkTools.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NetworkTools.debug.xcconfig"; path = "Target Support Files/Pods-NetworkTools/Pods-NetworkTools.debug.xcconfig"; sourceTree = "<group>"; };
@@ -67,10 +77,15 @@
 		184CACF7238B641E00E1A8ED /* NetworkTools */ = {
 			isa = PBXGroup;
 			children = (
-				184CAD0C238B648000E1A8ED /* NetworkTools */,
+				185035E1238CF5D9000FE6F6 /* Model */,
+				185035DE238CF44E000FE6F6 /* Request */,
+				184CAD0C238B648000E1A8ED /* NetTools */,
 				184CACF8238B641E00E1A8ED /* AppDelegate.swift */,
 				184CACFA238B641E00E1A8ED /* SceneDelegate.swift */,
 				184CACFC238B641E00E1A8ED /* ViewController.swift */,
+				184CAD25238CADD400E1A8ED /* DemoRequest.swift */,
+				184CAD29238CB73C00E1A8ED /* ProductIndexModel.swift */,
+				184CAD2B238CBE0A00E1A8ED /* DemoModel.swift */,
 				184CACFE238B641E00E1A8ED /* Main.storyboard */,
 				184CAD01238B642000E1A8ED /* Assets.xcassets */,
 				184CAD03238B642000E1A8ED /* LaunchScreen.storyboard */,
@@ -79,13 +94,29 @@
 			path = NetworkTools;
 			sourceTree = "<group>";
 		};
-		184CAD0C238B648000E1A8ED /* NetworkTools */ = {
+		184CAD0C238B648000E1A8ED /* NetTools */ = {
 			isa = PBXGroup;
 			children = (
-				184CAD0D238B64A100E1A8ED /* NetworkManager.swift */,
-				184CAD11238B748700E1A8ED /* APIRequest.swift */,
+				184CAD0D238B64A100E1A8ED /* NetTools.swift */,
+				184CAD11238B748700E1A8ED /* NetRequest.swift */,
 			);
-			path = NetworkTools;
+			path = NetTools;
+			sourceTree = "<group>";
+		};
+		185035DE238CF44E000FE6F6 /* Request */ = {
+			isa = PBXGroup;
+			children = (
+				185035DF238CF45A000FE6F6 /* OAuthTokenRequest.swift */,
+			);
+			path = Request;
+			sourceTree = "<group>";
+		};
+		185035E1238CF5D9000FE6F6 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				185035E2238CF5EB000FE6F6 /* OAuthTokenModel.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		B9901F780BE4570479757B6F /* Frameworks */ = {
@@ -220,11 +251,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				184CAD0E238B64A100E1A8ED /* NetworkManager.swift in Sources */,
+				184CAD2C238CBE0A00E1A8ED /* DemoModel.swift in Sources */,
+				184CAD0E238B64A100E1A8ED /* NetTools.swift in Sources */,
+				184CAD2A238CB73C00E1A8ED /* ProductIndexModel.swift in Sources */,
 				184CACFD238B641E00E1A8ED /* ViewController.swift in Sources */,
 				184CACF9238B641E00E1A8ED /* AppDelegate.swift in Sources */,
-				184CAD12238B748700E1A8ED /* APIRequest.swift in Sources */,
+				185035E0238CF45A000FE6F6 /* OAuthTokenRequest.swift in Sources */,
+				184CAD12238B748700E1A8ED /* NetRequest.swift in Sources */,
+				184CAD26238CADD400E1A8ED /* DemoRequest.swift in Sources */,
 				184CACFB238B641E00E1A8ED /* SceneDelegate.swift in Sources */,
+				185035E3238CF5EB000FE6F6 /* OAuthTokenModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
