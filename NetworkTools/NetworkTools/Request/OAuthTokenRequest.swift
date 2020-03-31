@@ -15,7 +15,7 @@ enum OAuthTokenRequest {
 
 extension OAuthTokenRequest: NetRequest {
     var host: String {
-        return "https://uatjinjiwo.1shitou.cn:16444"
+        return "https://uatauth.jinjiwo.com:2542"
     }
     
     var path: String {

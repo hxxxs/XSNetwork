@@ -8,7 +8,7 @@
 
 struct HomeRequest: NetRequest {
     var host: String {
-        return "https://uatjinjiwo.1shitou.cn:25013/lsj-business"
+        return "https://uat.jinjiwo.com:25013/lsj-business"
     }
     
     var path: String {
@@ -35,7 +35,7 @@ enum UserRequest {
 
 extension UserRequest: NetRequest {
     var host: String {
-        return "https://uatjinjiwo.1shitou.cn:25013/lsj-business"
+        return "https://uat.jinjiwo.com:25013/lsj-business"
     }
     
     var path: String {

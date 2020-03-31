@@ -17,50 +17,40 @@ typealias NetFailedBlock = (NSError) -> Void
 
 struct NetTools {
     static let shared = NetTools()
-    private var sessionManager: SessionManager?
+    private var sessionManager: Session?
     
     init() {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30
-        sessionManager = SessionManager(configuration: configuration,
-                                        delegate: SessionDelegate(),
-                                        serverTrustPolicyManager: nil)
-        sessionManager?.adapter = NetAdapter()
-        sessionManager?.retrier = NetRetrier()
+        sessionManager = Session(configuration: configuration, delegate: SessionDelegate(), interceptor: NetRequestInterceptor())
     }
 }
 
-//  MARK: - Adapter
+// MARK: - RequestInterceptor
 
-class NetAdapter: RequestAdapter {
-    func adapt(_ urlRequest: URLRequest) throws -> URLRequest {
+class NetRequestInterceptor: RequestInterceptor {
+    
+    private var isRefreshing = false
+    private var requestsToRetry: [(RetryResult) -> Void] = []
+    private var count: Int = 0
+    
+    func adapt(_ urlRequest: URLRequest, for session: Session, completion: @escaping (Result<URLRequest, Error>) -> Void) {
         var request = urlRequest
         if OAuthTokenModel.shared.access_token.count > 0 {
             request.setValue(OAuthTokenModel.shared.access_token, forHTTPHeaderField: "accessToken")
         }
-        return request
+        completion(.success(request))
     }
-}
-
-//  MARK: - Retrier
-
-class NetRetrier: RequestRetrier {
     
-    private var requestsToRetry: [RequestRetryCompletion] = []
-    private var count: Int = 0
-    private var isRefreshing = false
-    
-    func should(_ manager: SessionManager, retry request: Request, with error: Error, completion: @escaping RequestRetryCompletion) {
-        if let data = request.delegate.data,
-            let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
-            let code = json["code"] as? Int,
-            (code == 1002 || code == 1003 || code == 1009) {
+    func retry(_ request: Request, for session: Session, dueTo error: Error, completion: @escaping (RetryResult) -> Void) {
+        let err = (error as NSError)
+        if err.code == 1002 || err.code == 1003 || err.code == 1009 {
             requestsToRetry.append(completion)
             if !isRefreshing {
                 refreshToken()
             }
         } else {
-            completion(false,0)
+            completion(.doNotRetry)
         }
     }
     
@@ -72,10 +62,10 @@ class NetRetrier: RequestRetrier {
             print("refresh_token")
             OAuthTokenModel.shared.access_token = objc.access_token
             OAuthTokenModel.shared.refresh_token = objc.refresh_token
-            self.requestsToRetry.forEach { $0(true, 0) }
+            self.requestsToRetry.forEach { $0(.retry)}
             self.requestsToRetry.removeAll()
         }) { (error) in
-            self.requestsToRetry.forEach { $0(false, 0) }
+            self.requestsToRetry.forEach { $0(.doNotRetry) }
             self.requestsToRetry.removeAll()
             self.isRefreshing = false
         }
@@ -203,12 +193,10 @@ extension NetTools {
             let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
             let code = json["code"] as? Int {
             if (code == 1002 || code == 1003 || code == 1009) {
-                return .failure(NSError(domain: "登录已过期", code: code, userInfo: nil))
-            } else if code == 1001 {
-                return .failure(NSError(domain: "您还没有登录", code: code, userInfo: nil))
+                return .failure(AFError.responseValidationFailed(reason: .unacceptableStatusCode(code: 1003)))
             }
         }
-        return .success
+        return .success(Void())
     }
     
 }
@@ -216,48 +204,44 @@ extension NetTools {
 //  MARK: - ResponseHandler
 
 private extension NetTools {
-    func responseHandler(response: DataResponse<Any>,
+    func responseHandler(response: AFDataResponse<Any>,
                          successJSONBlock: NetSuccessJSONBlock,
                          faliedBlock: NetFailedBlock) {
-        if let value = response.result.value as? [String: Any] {
+        if let value = response.value as? [String: Any] {
             successJSONBlock(value)
-        } else if let error = response.result.error {
-            failedHandler(error: error as NSError,
+        } else if let error = response.error {
+            failedHandler(error: error,
                           faliedBlock: faliedBlock)
         } else {
             faliedBlock(NSError(domain: "数据解析出错", code: -1, userInfo: nil))
         }
     }
-    
-    func responseHandler<T: Any>(response: DataResponse<Any>,
+
+    func responseHandler<T: Any>(response: AFDataResponse<Any>,
                                        successBlock: NetSuccessBlock<T>,
                                        faliedBlock: NetFailedBlock){
-        if let value = response.result.value as? [String: Any] {
+        if let value = response.value as? [String: Any] {
             successHandler(value: value,
                            successBlock: successBlock,
                            faliedBlock: faliedBlock)
-        } else if let error = response.result.error {
-            failedHandler(error: error as NSError,
+        } else if let error = response.error {
+            failedHandler(error: error,
                           faliedBlock: faliedBlock)
         } else {
             faliedBlock(NSError(domain: "数据解析出错", code: -1, userInfo: nil))
         }
     }
     
-    func failedHandler(error: NSError,
+    func failedHandler(error: AFError,
                        faliedBlock: NetFailedBlock) {
-        var e = error
-        if error.code == -1009 {
-            e = NSError(domain: "无网络连接", code: error.code, userInfo: nil)
-        } else if error.code == -1001 {
-            e = NSError(domain: "请求超时", code: error.code, userInfo: nil)
-        } else if error.code == -1005 {
-            e = NSError(domain: "网络连接丢失(服务器忙)", code: error.code, userInfo: nil)
-        } else if error.code == -1004 {
-            e = NSError(domain: "服务器没有启动", code: error.code, userInfo: nil)
-        } else if error.code == 404 || error.code == 3 {
+        var err = error as NSError
+        if let code = error.responseCode {
+            if code == 1003 {
+                err = NSError(domain: "登录信息已过期", code: code, userInfo: nil)
+            }
         }
-        faliedBlock(e)
+        
+        faliedBlock(err)
     }
     
     func successHandler<T: Any>(value: [String: Any],
