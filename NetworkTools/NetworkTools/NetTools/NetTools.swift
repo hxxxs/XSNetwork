@@ -43,11 +43,14 @@ class NetRequestInterceptor: RequestInterceptor {
     }
     
     func retry(_ request: Request, for session: Session, dueTo error: Error, completion: @escaping (RetryResult) -> Void) {
-        let err = (error as NSError)
-        if err.code == 1002 || err.code == 1003 || err.code == 1009 {
-            requestsToRetry.append(completion)
-            if !isRefreshing {
-                refreshToken()
+        if let tempError = error.asAFError?.underlyingError as NSError? {
+            if tempError.code == 1002 || tempError.code == 1003 || tempError.code == 1009 {
+                requestsToRetry.append(completion)
+                if !isRefreshing {
+                    refreshToken()
+                }
+            } else {
+                completion(.doNotRetry)
             }
         } else {
             completion(.doNotRetry)
@@ -192,8 +195,10 @@ extension NetTools {
         if let data = data,
             let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) as? [String: Any],
             let code = json["code"] as? Int {
-            if (code == 1002 || code == 1003 || code == 1009) {
-                return .failure(AFError.responseValidationFailed(reason: .unacceptableStatusCode(code: 1003)))
+            if code == 1002 || code == 1003 || code == 1009 {
+                return .failure(NSError(domain: "登录已过期", code: code, userInfo: nil))
+            } else if code == 1001 {
+                return .failure(NSError(domain: "您还没有登录", code: code, userInfo: nil))
             }
         }
         return .success(Void())
@@ -234,10 +239,19 @@ private extension NetTools {
     
     func failedHandler(error: AFError,
                        faliedBlock: NetFailedBlock) {
-        var err = error as NSError
-        if let code = error.responseCode {
-            if code == 1003 {
-                err = NSError(domain: "登录信息已过期", code: code, userInfo: nil)
+        var err = NSError()
+        if error.isSessionTaskError,
+            let typeError = error.underlyingError as NSError? {
+            if typeError.code == -1009 {
+                err = NSError(domain: "无网络连接", code: typeError.code, userInfo: nil)
+            } else if typeError.code == -1001 {
+                err = NSError(domain: "请求超时", code: typeError.code, userInfo: nil)
+            } else if typeError.code == -1005 {
+                err = NSError(domain: "网络连接丢失(服务器忙)", code: typeError.code, userInfo: nil)
+            } else if typeError.code == -1004 {
+                err = NSError(domain: "网络异常，请稍后重试", code: typeError.code, userInfo: nil)
+            } else if typeError.code == 404 || typeError.code == 3 || typeError.code == 4 {
+                err = NSError(domain: "系统异常，请稍后重试", code: typeError.code, userInfo: nil)
             }
         }
         
